@@ -49,7 +49,7 @@ services:
   # [Backend] Spring Boot Application
   backend:
     build:
-      context: ../backend    # ../backend 폴더를 빌드 컨텍스트로 사용
+      context: ../../backend    # ../../backend 폴더를 빌드 컨텍스트로 사용
       dockerfile: Dockerfile # 그 안의 Dockerfile로 이미지를 만든다
     container_name: kyonggi-backend
     
