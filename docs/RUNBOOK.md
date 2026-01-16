@@ -13,8 +13,6 @@
 
 ---
 
-
-
 ## 1) Quickstart — Docker Compose (Local)
 ### 1.1 준비
 - `.env`는 **로컬에서만** 생성한다(커밋 금지). 템플릿은 `.env.example` 참고.
@@ -47,9 +45,6 @@ curl -i -X POST "http://localhost:8080/auth/signup/otp/request" \
 ```bash
 docker compose down -v
 ```
-
-
-
 
 ---
 
@@ -110,11 +105,10 @@ curl -i -X POST "http://localhost:8080/auth/signup/otp/request" \
   -d '{"email":"add28482848@kyonggi.ac.kr"}'
 
 # MailHog UI (브라우저): http://localhost:8025
+```
+
+
 ---
-
-
-
-
 
 ## 3) Quickstart — k3d (Prod overlay: Real SMTP)
 > prod overlay는 “실제 SMTP로 릴레이”한다. **시크릿은 절대 커밋 금지**.
@@ -261,6 +255,8 @@ docker compose -f infra/docker-compose.yml down -v
 ```
 
 ---
+
+
 
 ## 2) Quickstart — k3d (Local overlay: MailHog)
 ### 2.1 클러스터 생성/삭제
