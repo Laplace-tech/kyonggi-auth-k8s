@@ -1,0 +1,44 @@
+spring:
+  datasource:
+    # [Infrastructure Contract] 운영 환경은 반드시 환경변수로 DB 정보를 주입해야 함.
+    url: ${SPRING_DATASOURCE_URL:?set SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME:?set SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD:?set SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # [Prod Tuning] 운영 환경 커넥션 풀 튜닝 (서버 사양에 맞춰 추후 조정 필요)
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  mail:  
+    host: ${SPRING_MAIL_HOST:?set SPRING_MAIL_HOST}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:?set SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD:?set SPRING_MAIL_PASSWORD}
+    protocol: smtp
+    test-connection: true  # 부팅 시점에 SMTP 연결 확인
+    properties:
+      "[mail.smtp.auth]": true
+      "[mail.smtp.starttls.enable]": true
+      "[mail.smtp.starttls.required]": true
+      "[mail.smtp.connectiontimeout]": 5000
+      "[mail.smtp.timeout]": 5000
+      "[mail.smtp.writetimeout]": 5000
+
+app:
+  auth:
+    refresh:
+      # [Security] 운영 환경은 HTTPS가 필수이므로 Secure 쿠키 강제
+      cookie-secure: true
+    
+    # [Keys] 운영 환경 키는 반드시 주입 (누락 시 부팅 실패)
+    jwt:
+      issuer: kyonggi-board-prod
+      secret: ${APP_AUTH_JWT_SECRET:?set APP_AUTH_JWT_SECRET (prod)}
+  
+  otp:
+    hmac-secret: ${APP_OTP_HMAC_SECRET:?set APP_OTP_HMAC_SECRET (prod)}
+
+  mail:
+    from: ${APP_MAIL_FROM:? set APP_MAIL_FROM (prod)}

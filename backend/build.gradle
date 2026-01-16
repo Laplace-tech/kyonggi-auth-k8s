@@ -1,0 +1,68 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.0' 
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.kyonggi'
+version = '0.0.1-SNAPSHOT'
+description = 'Demo project for Spring Boot'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+
+	// Spring Boot Starters: (웹/검증/JPA/보안/메일)
+	implementation 'org.springframework.boot:spring-boot-starter-web' 		 // MVC/컨트롤러/MockMvc 기반
+	implementation 'org.springframework.boot:spring-boot-starter-validation' // @Valid, Bean Validation 
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'   // JPA + Hibernate + Repository
+	implementation 'org.springframework.boot:spring-boot-starter-security'	 // Spring Security 필터체인/JWT 인증
+    implementation 'org.springframework.boot:spring-boot-starter-mail'		 // JavaMailSender (회원가입 OTP 메일)
+
+	// DB / Migration (MySQL + Flyway + JDBC)
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-mysql'
+	runtimeOnly 'com.mysql:mysql-connector-j' // MySQL 드라이버 (runtimeOnly): 컴파일 때는 굳이 필요 없고, 실행할 때만 JDBC 드라이버 로딩하면 됨
+
+	// JWT (JJWT)
+	implementation "io.jsonwebtoken:jjwt-api:0.11.5" 	// 컴파일 타임에 쓰는 인터페이스
+	runtimeOnly  "io.jsonwebtoken:jjwt-impl:0.11.5" 	// 실제 구현체 (런타임에 필요)
+	runtimeOnly  "io.jsonwebtoken:jjwt-jackson:0.11.5"  // JSON 직렬화/역직렬화 지원 (클레임 처리 등)
+
+	// Lombok (컴파일 타임 애노테이션 처리)
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+	// Test (Spring Test + Security Test + JUnit Launcher)
+	testImplementation 'org.springframework.boot:spring-boot-starter-test' // JUnit5, AssertJ, MockMVC, Spring test 등 "테스트 풀세트"
+	testImplementation 'org.springframework.security:spring-security-test' // @WithMockUSer, security mock request post processor 등
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher' 		   // IDE/Gradle 실행 시 필요할 때가 있음
+
+	// Testcontainers (통합테스트용 MySQL 컨테이너)
+  	testImplementation "org.testcontainers:junit-jupiter"		
+  	testImplementation "org.testcontainers:mysql"
+
+	// Spring Boot Actuator (운영/모니터링)
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+}	
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

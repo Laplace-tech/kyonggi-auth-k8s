@@ -1,0 +1,72 @@
+# application.yml: 공통 설정 응집
+
+# (local, test, prod) 설정 환경에서 해당 변수들을 Override(재정의) 해야 함
+# - app.auth.refresh.cookie-secure
+# - app.auth.jwt.secret
+# - app.otp.hmac-secret
+
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true  
+
+spring:
+
+  # [JPA & DB Common]
+  jpa:
+    # [REFACTOR] OSIV Off는 필수.
+    # 트랜잭션 밖에서 DB 커넥션을 물고 있는 최악의 패턴 방지. (API 응답 지연 시 DB 고갈 원인)
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate # 엔티티 매핑과 실제 DB 스키마가 일치하는지 검증 (스키마 관리는 Flyway가 담당)
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
+
+  # [Flyway]
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true # 기존 DB가 있어도 마이그레이션 이력 테이블 생성
+
+  
+# [Application Domain Config]
+app:
+  auth:
+    jwt:
+      issuer: kyonggi-board
+      access-ttl-seconds: 900
+      # secret: secret 키는 여기서 정의하지 않음. 
+      # - 공통 파일에 ${} 문법을 두면, 프로필별 오버라이딩 로직과 헷갈릴 수 있음. 
+      # - 각 프로필/Env에서 주입받는 게 명확함.
+
+    refresh: 
+      cookie-name: KG_REFRESH
+      cookie-path: /auth    
+      cookie-same-site: Lax  
+      # cookie-secure: cookie-secure는 환경별(prod/local)로 다름 -> 각 파일에서 처리
+      remember-me-seconds: 604800 
+      session-ttl-seconds: 86400 
+
+  otp:
+    ttl-minutes: 10
+    max-failures: 5
+    resend-cooldown-seconds: 20
+    daily-send-limit: 5
+    # hmac-secret: hmac-secret도 각 환경별로 다른 환경변수로 주입
+
+# [Actuator]
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health

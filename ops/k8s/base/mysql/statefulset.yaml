@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  # StatefulSet은 안정적인 네트워크 ID/스토리지를 위해 serviceName을 둔다.
+  # 여기서는 mysql Service와 연결되는 이름.
+  serviceName: mysql
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: mysql
+
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+
+          # envFrom으로 mysql 환경변수 주입
+          # - ConfigMap: MYSQL_DATABASE, MYSQL_USER 같은 "비민감" 설정
+          # - Secret: MYSQL_PASSWORD, MYSQL_ROOT_PASSWORD 같은 "민감" 값
+          envFrom:
+            - configMapRef:
+                name: mysql-config
+            - secretRef:
+                name: mysql-secret
+
+          # MySQL 데이터 디렉토리를 PVC에 마운트(데이터 유지)
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+
+          # ✅ (B) readinessProbe: mysql이 실제로 ping 응답 가능한지 확인
+          # exec는 쉘 확장을 위해 sh -c 사용(환경변수 사용)
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - mysqladmin ping -h 127.0.0.1 -uroot -p"$MYSQL_ROOT_PASSWORD"
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12   # 60초 정도 기다림
+
+          # ✅ (운영급 최소) resources
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+
+
+            

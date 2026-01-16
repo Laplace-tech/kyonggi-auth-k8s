@@ -1,0 +1,60 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kyonggi
+
+resources:
+  - ../../base
+  - ../../base/mailhog   # ✅ local만 mailhog 포함(otp 확인용)
+
+images:
+  - name: kyonggi-backend
+    newTag: local        # ✅ local은 무조건 :local
+
+
+# ------------------------------------------------------------
+# ConfigMap = 공개 가능(비밀 아님)
+# - 프로필/외부 시스템 위치(host/port) 같은 것만 둔다.
+# ------------------------------------------------------------
+configMapGenerator:
+  - name: backend-config
+    literals:
+      # Spring profile: local
+      - SPRING_PROFILES_ACTIVE=local
+
+      # DB (password는 Secret)
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/kyonggi_board?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=utf8
+      - SPRING_DATASOURCE_USERNAME=kyonggi
+      # - SPRING_DATASOURCE_PASSWORD   (Secret: backend-secret 에서 주입)
+
+      # local SMTP는 mailhog
+      - SPRING_MAIL_HOST=mailhog
+      - SPRING_MAIL_PORT=1025
+
+      # 발신자
+      - APP_MAIL_FROM=local-noreply@kyonggi.local
+
+      # Flyway retry
+      - SPRING_FLYWAY_CONNECT_RETRIES=30
+      - SPRING_FLYWAY_CONNECT_RETRIES_INTERVAL=2s
+
+      # JWT/OTP 서명에 필요한 키값
+      # - APP_AUTH_JWT_SECRET         (Secret: backend-secret 에서 주입)
+      # - APP_OTP_HMAC_SECRET         (Secret: backend-secret 에서 주입)
+
+  - name: mysql-config
+    literals:
+      - MYSQL_DATABASE=kyonggi_board
+      - MYSQL_USER=kyonggi
+
+# ------------------------------------------------------------
+# Secret = 커밋 금지 
+# ------------------------------------------------------------
+secretGenerator:
+  - name: backend-secret
+    envs:
+      - secrets/backend.env
+
+  - name: mysql-secret
+    envs:
+      - secrets/mysql.env

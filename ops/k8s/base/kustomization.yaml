@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1  # Kustomize 파일 포맷 버전
+kind: Kustomization                          # "이 디렉토리는 kustomize 리소스 묶음이다" 선언
+
+# base는 "환경과 무관하게 항상 동일한 뼈대"만 둔다.
+# (Deployment/Service/StatefulSet/Namespace 등)
+# local/prod 같이 환경별 값(프로필/SMTP/시크릿)은 overlays에서 주입하는 게 정석.
+resources:
+  - namespace.yaml
+
+  - backend/deployment.yaml
+  - backend/service.yaml
+
+  - mysql/statefulset.yaml
+  - mysql/service.yaml

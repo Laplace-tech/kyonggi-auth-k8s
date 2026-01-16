@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          env:
+            # 서버 바인딩이 127.0.0.1로 잡히면
+            # Service가 파드로 붙어도 외부 연결이 실패할 수 있음.
+            # 그래서 0.0.0.0 바인딩을 강제하는 목적.
+            - name: SERVER_ADDRESS
+              value: "0.0.0.0"

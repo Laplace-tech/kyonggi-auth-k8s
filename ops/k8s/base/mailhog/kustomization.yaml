@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# MailHog는 "옵션 컴포넌트"처럼 분리해둠.
+# - local overlay에서는 포함(OTP 메일 확인용)
+# - prod overlay에서는 보통 제외(실제 SMTP로 보내니까)
+resources:
+  - deployment.yaml
+  - service.yaml

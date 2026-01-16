@@ -1,0 +1,89 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kyonggi
+
+resources:
+  # prod에서는 mailhog 없이 실제 SMTP 사용
+  - ../../base
+
+images:
+  - name: kyonggi-backend
+    newTag: v1.0.0  # 운영은 태그 고정: 재현/롤백 가능
+
+patches:
+  # base Deployment 중 backend에만 patch 적용되도록 타겟 지정 (실수 방지)
+  - target:
+      kind: Deployment
+      name: backend
+    path: patch-backend-bind.yaml
+
+# ------------------------------------------------------------
+# generatorOptions
+# - ConfigMap/Secret 이름에 hash suffix가 붙으면(기본 동작)
+#   base/patch가 고정 이름을 참조할 때 깨질 수 있음.
+# - 운영/디버깅 단순화를 위해 prod는 고정 이름을 강하게 권장.
+# ------------------------------------------------------------
+generatorOptions:
+  disableNameSuffixHash: true
+
+
+# ------------------------------------------------------------
+# ConfigMap = 공개 가능(비밀 아님)
+# - "환경 성격" / "외부 시스템 위치(host/port)" / "프로필" 등
+# - 비밀값(패스워드/서명키)은 절대 넣지 말 것 -> Secret로 분리
+# ------------------------------------------------------------
+configMapGenerator:
+  - name: backend-config
+    literals:
+      # Spring profile: prod
+      - SPRING_PROFILES_ACTIVE=prod
+
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/kyonggi_board?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=utf8
+      - SPRING_DATASOURCE_USERNAME=kyonggi
+      # - SPRING_DATASOURCE_PASSWORD  (Secret: backend-secret 에서 주입)
+
+      - SPRING_MAIL_HOST=smtp-relay.brevo.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=9fefb5001@smtp-brevo.com
+      # - SPRING_MAIL_PASSWORD        (Secret: backend-secret 에서 주입)
+
+      # From은 SMTP 제공자(Brevo)에서 검증된 Sender만 허용함
+      - APP_MAIL_FROM=add28482848@gmail.com
+
+      # 부팅 시 SMTP 연결 확인 (fail-fast)
+      # - true  : SMTP 장애/오설정이면 앱 부팅 실패 (운영에선 더 안전)
+      # - false : 앱은 뜨지만 메일 발송이 런타임 실패(로그로만 보일 수 있음)
+      - SPRING_MAIL_TEST_CONNECTION=true
+
+      # Spring mail 옵션 (application-prod.yml의 spring.mail.properties.mail.smtp.* 과 매핑됨)
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED=true
+
+      # DB가 늦게 올라오는 레이스 흡수(Flyway)
+      - SPRING_FLYWAY_CONNECT_RETRIES=30
+      - SPRING_FLYWAY_CONNECT_RETRIES_INTERVAL=2s
+
+      # JWT/OTP 서명에 필요한 키값
+      # - APP_AUTH_JWT_SECRET         (Secret: backend-secret 에서 주입)
+      # - APP_OTP_HMAC_SECRET         (Secret: backend-secret 에서 주입)
+
+  - name: mysql-config
+    literals:
+      - MYSQL_DATABASE=kyonggi_board
+      - MYSQL_USER=kyonggi
+      
+# ------------------------------------------------------------
+# Secret = 절대 커밋 금지
+# - backend-secret: DB password + SMTP password + JWT/OTP secret
+# - mysql-secret: MySQL 비밀번호들
+# ------------------------------------------------------------
+secretGenerator:
+  - name: backend-secret
+    envs:
+      - secrets/backend.env
+
+  - name: mysql-secret
+    envs:
+      - secrets/mysql.env

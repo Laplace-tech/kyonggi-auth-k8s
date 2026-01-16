@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1   # 파드 1개 유지(죽으면 재생성)
+
+  # selector는 "이 Deployment가 관리할 파드"를 찾는 조건.
+  #  -> template.labels 와 selector.matchLabels 는 반드시 일치해야 함.
+  selector:
+    matchLabels:
+      app: backend
+
+  template:
+    metadata:
+      labels:
+        app: backend   # Service도 이 라벨로 파드를 찾아감(아래 Service selector)
+
+      # ✅ 더 이상 vars/annotation trick 필요 없음.
+      # - ConfigMap/Secret은 Kustomize generator가 기본으로 nameSuffixHash를 붙임.
+      # - 그러면 envFrom의 configMapRef/secretRef name도 자동으로 "해시 붙은 이름"으로 rewrite됨.
+      # - 결과적으로 PodTemplate이 바뀌어서 Deployment가 자동 롤링 업데이트 됨.
+    spec:
+      terminationGracePeriodSeconds: 20
+      
+      containers:
+        - name: backend
+
+          # 이미지 이름(레포/태그)은 overlays에서 바꾸기 쉬움
+          image: kyonggi-backend
+
+          # IfNotPresent:
+          # - 노드에 이미지가 이미 있으면 pull 안 함
+          # - k3d에서 "k3d image import" 해두면 이게 편함
+          imagePullPolicy: IfNotPresent
+
+          # containerPort는 "힌트" 성격(문서/툴링용).
+          # 외부 노출은 Service가 담당.
+          ports:
+            - containerPort: 8080
+
+          # envFrom:
+          # - ConfigMap/Secret에 들어있는 key=value를 환경변수로 통째로 주입
+          # - Spring Boot는 SPRING_* / APP_* 환경변수를 설정으로 자동 바인딩함
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: backend-secret
+
+          # ✅ (A) startupProbe / readinessProbe / livenessProbe
+          #
+          # - startupProbe: "부팅 중"일 때 오래 기다려주는 보험 (DB/Flyway 느릴 때 필수)
+          # - readinessProbe: "트래픽 받아도 됨?" (false면 Service가 라우팅 안 함)
+          # - livenessProbe: "죽었나?" (fail이면 kube가 재시작)
+          #
+          # ⚠️ 주의: /actuator/health/readiness, /liveness는
+          #     반드시 인증 없이 200이 나와야 함(401이면 kube가 계속 죽임)
+          # --- Probes (인프라 계약) ---
+          # /actuator/health/** 는 반드시 permitAll이어야 함(401이면 kube가 계속 죽임)
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            periodSeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 40  # 최대 120초
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 6   # 30초 연속 실패 => NotReady
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3   # 30초 연속 실패 => Restart
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

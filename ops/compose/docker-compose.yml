@@ -1,0 +1,106 @@
+services:
+
+  # [DB] Local Development MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: kyonggi-mysql
+    command:   
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+
+    # ✅ secrets/mysql.env에서 로드 (경로가 명확해짐)
+    env_file:
+      - ./secrets/mysql.env
+
+    environment:
+      # MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set in ops/compose/secrets/mysql.env}
+      MYSQL_DATABASE: kyonggi_board
+      MYSQL_USER: kyonggi      
+      # MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set in ops/compose/secrets/mysql.env}
+      TZ: Asia/Seoul         
+
+    ports:
+      - "127.0.0.1:3306:3306" # host(127.0.0.1:3306) -> container(3306)
+
+    volumes:
+      - mysql_data:/var/lib/mysql # mysql_data 라는 named volume에 /var/lib/mysql을 저장 (컨테이너를 내려도 DB 데이터가 유지됨)
+      - ./mysql-init:/docker-entrypoint-initdb.d
+
+    healthcheck:
+      # MySQL이 "진짜로 준비 완료" 상태인지 검사.
+      # 단순히 컨테이너가 떴다고 DB가 바로 쓸 수 있는게 아니라,
+      # 내부 초기화 시간이 걸리므로 이게 중요함.
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
+
+      interval: 5s # 5초마다 체크
+      timeout: 3s  # 체크 명령 최대 3초 기다림
+      retries: 30  # 최대 30번 재시도 (대략 150초까지 허용 가능)
+      start_period: 20s # 컨테이너 시작 후 20초는 실패해도 봐준다(부팅 워밍업 기간)
+
+  # [Mail] Local SMTP Capture (MailHog)
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: kyonggi-mailhog
+    ports:
+      - "1025:1025"           # 컨테이너 내부 SMTP 포트
+      - "127.0.0.1:8025:8025" # 컨테이너 내부 UI 포트
+
+  # [Backend] Spring Boot Application
+  backend:
+    build:
+      context: ../backend    # ../backend 폴더를 빌드 컨텍스트로 사용
+      dockerfile: Dockerfile # 그 안의 Dockerfile로 이미지를 만든다
+    container_name: kyonggi-backend
+    
+    ports:
+      - "127.0.0.1:8080:8080"  # 호스트 8080 -> 컨테이너 8080
+      
+    # [REFACTOR] 로컬 개발 시엔 'on-failure' 금지.
+    # 에러가 나서 뻗었으면, 왜 뻗었는지 로그를 분석할 시간을 줘야 함. 무한 재부팅은 디버깅을 방해함.
+    restart: "no"
+
+    # ✅ secrets/backend.env에서 로드 (경로가 명확해짐)
+    env_file:
+      - ./secrets/backend.env
+
+    environment:
+      # 프로파일 설정: The following 1 profile is active: "local"
+      SPRING_PROFILES_ACTIVE: local
+      TZ: Asia/Seoul
+      JAVA_TOOL_OPTIONS: -Duser.timezone=Asia/Seoul
+      
+      # [DB Connection]
+      # timezone은 드라이버/DB/앱 일치가 핵심 -> URL에 명시하는 게 안전
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/kyonggi_board?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      SPRING_DATASOURCE_USERNAME: kyonggi
+      # SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:?set in ops/compose/secrets/backend.env}
+
+      # [Mail Connection]
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
+
+      # [App Mail Property]
+      APP_MAIL_FROM: noreply@local.kyonggi
+
+      # [Flyway 연결 재시도]
+      # 앱 시작 시 Flyway가 DB에 붙어서 마이그레이션을 수행하는데,
+      # DB가 아직 기동 중이면 연결 실패가 날 수 있음.
+      # 그래서 재시도를 걸어두는 안전장치.
+      SPRING_FLYWAY_CONNECT_RETRIES: "30"
+      SPRING_FLYWAY_CONNECT_RETRIES_INTERVAL: "2s"
+
+      # [Secret Keys]
+      # APP_AUTH_JWT_SECRET: ${APP_AUTH_JWT_SECRET:?set in ops/compose/secrets/backend.env}
+      # APP_OTP_HMAC_SECRET: ${APP_OTP_HMAC_SECRET:?set in ops/compose/secrets/backend.env}
+
+    depends_on:
+      mysql:
+        condition: service_healthy # backend는 mysql이 "healthy" 될 때까지 기다린 다음에 시작
+      mailhog:
+        condition: service_started # mailhog는 뜨기만 하면 OK 
+
+volumes:
+  # mysql_data는 "도커가 관리하는 데이터 저장소"
+  # 컨테이너를 삭제/재생성해도 데이터가 유지되어 개발이 편해짐.
+  mysql_data:

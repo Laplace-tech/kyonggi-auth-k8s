@@ -1,0 +1,49 @@
+# application-test.yml
+# 로컬/운영과 격리
+# DB/MAIL 설정은 Testcontainers + @DynamicPropertySource가 최종 강제한다.
+
+spring:
+  test:
+    database:
+      replace: none # Embedded DB 금지
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    # clean-disabled: false  # (선택) 테스트에서 flyway.clean()을 실제로 쓸 때만 켜두기
+
+  datasource:
+    hikari:
+      maximum-pool-size: 4
+      minimum-idle: 1
+
+    # ❌ url/username/password/driver-class-name 불필요 (DynamicPropertySource가 강제)
+
+  mail:
+    # ❌ host/port/auth/starttls 불필요 (DynamicPropertySource가 강제)
+    properties:
+      mail:
+        smtp:
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+app:
+  auth:
+    jwt:
+      issuer: kyonggi-board-test
+      secret: local-test-jwt-secret-change-me-32-bytes-min
+    refresh:
+      cookie-secure: false
+
+  otp:
+    hmac-secret: local-dev-otp-secret-change-me-32-bytes-min
+
+  mail:
+    from: noreply@test.kyonggi

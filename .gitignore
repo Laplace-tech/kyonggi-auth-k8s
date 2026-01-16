@@ -1,0 +1,47 @@
+### OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.tmp
+*.log
+
+# VSCode: 기본은 무시, settings.json만 허용(원하면)
+.vscode/*
+!.vscode/settings.json
+
+### Gradle / Java build outputs
+**/.gradle/
+**/build/
+out/
+target/
+*.class
+
+### Secrets (commit only *.env.example)
+# defense-in-depth: env 전부 차단
+.env
+*.env
+!*.env.example
+
+# 템플릿만 허용
+!.env.example
+!*.env.example
+!**/secrets/*.env.example
+
+# (명시적으로 위험 경로를 한 번 더 박아두기)
+ops/compose/secrets/*.env
+!ops/compose/secrets/*.env.example
+
+ops/k8s/overlays/**/secrets/*.env
+!ops/k8s/overlays/**/secrets/*.env.example
+
+### Key material
+*.pem
+*.key
+*.p12
+*.jks
+
+### Misc
+*.pid
+*.seed
+*.cache

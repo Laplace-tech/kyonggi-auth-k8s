@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailhog   # 클러스터 DNS: mailhog
+spec:
+  selector:
+    app: mailhog
+  ports:
+    # mailhog:1025 -> 파드:1025(SMTP)
+    - name: smtp
+      port: 1025
+      targetPort: 1025
+    # mailhog:8025 -> 파드:8025(HTTP UI)
+    - name: http
+      port: 8025
+      targetPort: 8025
+
+

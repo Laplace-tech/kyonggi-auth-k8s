@@ -1,0 +1,16 @@
+# 기본은 자동 감지
+* text=auto
+
+# scripts/config/docs는 LF로 고정
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.env.example text eol=lf
+
+# Gradle wrapper
+/gradlew text eol=lf
+*.bat text eol=crlf
+
+# Binaries
+*.jar binary

@@ -1,0 +1,35 @@
+# [REFACTOR] application.yml과 겹치는 내용 제거 (DRY 원칙)
+spring:
+
+  datasource:
+    # [Network Strategy]
+    # 1. IDE 실행 (java -jar): 환경변수 없음 -> localhost (127.0.0.1) 접속
+    # 2. Docker Compose 실행: 환경변수 주입됨 -> mysql (컨테이너 DNS) 접속
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/kyonggi_board?useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:kyonggi}
+    password: ${SPRING_DATASOURCE_PASSWORD:kyonggi}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  mail:
+    # Docker Compose가 주입하면 mailhog, 아니면 localhost
+    host: ${SPRING_MAIL_HOST:localhost}
+    port: ${SPRING_MAIL_PORT:1025}
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
+    
+app:
+  auth:  
+    refresh:
+      cookie-secure: false # 로컬은 HTTPS가 아니므로 false
+
+    # [Dev Key] 개발 편의성을 위한 하드코딩된 키 (운영엔 절대 유출 금지)
+    jwt:
+      issuer: kyonggi-board-local
+      secret: ${APP_AUTH_JWT_SECRET:?set APP_AUTH_JWT_SECRET (local)}
+  
+  otp:
+    hmac-secret: ${APP_OTP_HMAC_SECRET:?set APP_OTP_HMAC_SECRET (local)}
+
+  mail:
+    from: ${APP_MAIL_FROM:? set APP_MAIL_FROM (local)}

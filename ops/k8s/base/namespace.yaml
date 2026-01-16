@@ -1,0 +1,4 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kyonggi   # 모든 리소스를 이 네임스페이스에 격리(정리/충돌 방지)

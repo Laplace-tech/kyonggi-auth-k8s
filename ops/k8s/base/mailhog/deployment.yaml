@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailhog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mailhog
+  template:
+    metadata:
+      labels:
+        app: mailhog
+    spec:
+      containers:
+        - name: mailhog
+          image: mailhog/mailhog:v1.0.1
+          ports:
+            # MailHog는 포트가 2개다.
+            # 1025: SMTP (앱이 메일을 "보내는" 포트)
+            # 8025: HTTP UI/API (사람이 브라우저로 메일 확인하는 포트)
+            - name: smtp
+              containerPort: 1025
+            - name: http
+              containerPort: 8025
