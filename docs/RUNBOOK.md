@@ -273,6 +273,8 @@ sudo lsof -i :8025 || true
 
 ---
 
+
+
 # Appendix A — Auth Smoke Test (curl, full flow)
 
 > 목적: 회원가입 → 로그인 → me → refresh rotation → logout까지,  
@@ -392,6 +394,7 @@ cat "$CK3"
 rm -f "$CK" "$CK2" "$CK3" || true
 ```
 
+
 ---
 
 # Appendix B — DB 확인 (Compose 기준)
@@ -420,64 +423,10 @@ docker exec -i kyonggi-mysql \
   -e "select * from refresh_tokens;"
 ```
 
----
-
-# Appendix C — 테스트 코드 실행 목록(Gradle)
-
-> 목적: “정책/불변조건”을 자동으로 검증한다.  
-> 기준 위치: `~/kyonggi-board/backend`
-
-## C.1 전체 테스트
-```bash
-cd ~/kyonggi-board/backend
-
-# 기본
-./gradlew test
-
-# 빌드 산출물까지 리셋 후 다시
-./gradlew clean test
-
-# 자세한 로그(원인 추적에 유리)
-./gradlew test --info
-
-# 실패 원인 스택트레이스 상세
-./gradlew test --stacktrace
-
-# 데몬 영향 제거(환경 일관성)
-./gradlew test --no-daemon
-
-# 캐시/업투데이트 무시하고 강제로 다시 실행
-./gradlew test --rerun-tasks
-```
-
-## C.2 특정 테스트 클래스/패턴만 실행
-```bash
-cd ~/kyonggi-board/backend
-
-# FQCN(권장: 가장 확실)
-./gradlew test --tests "com.kyonggi.backend.ActuatorHealthIT"
-
-# 패턴 매칭(와일드카드 가능)
-./gradlew test --tests "*AuthMeIntegrationTest"
-./gradlew test --tests "*AuthRefreshRotationIntegrationTest"
-./gradlew test --tests "*AuthLogoutIntegrationTest"
-
-# 패키지/접두 패턴(Gradle 패턴 규칙에 따름)
-./gradlew test --tests "com.kyonggi.backend.auth.*"
-```
-
-## C.3 테스트 결과/리포트 확인
-```bash
-# HTML 리포트(로컬 파일)
-# backend/build/reports/tests/test/index.html
-
-# XML 결과
-# backend/build/test-results/test/
-```
 
 ---
 
-# Appendix D — 코드 검색(grep) 유틸
+# Appendix C — 코드 검색(grep) 유틸
 ```bash
 cd ~/kyonggi-board/backend
 

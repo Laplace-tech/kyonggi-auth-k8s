@@ -8,13 +8,11 @@
 - **RUNBOOK.md**: 재현/운영 절차(명령어 중심) + 스모크 검증(curl) + 테스트 실행(gradle) + 트러블슈팅
 - **API.md**: HTTP 계약(스펙) 단일 진실(요청/응답/에러/쿠키 정책/함정/호환성 규칙)
 - **DEMO.md**: 발표/시연용 5~8분 스크립트(순서 고정, 말할 포인트 포함)
-- **ROADMAP.md**: Phase 0~7 진행판(완료 기준/현재 상태/다음 액션/증거 링크)
 
 ## 빠른 링크
 - [RUNBOOK](./docs/RUNBOOK.md)
 - [API](./docs/API.md)
 - [DEMO](./docs/DEMO.md)
-- [ROADMAP](./docs/ROADMAP.md)
 
 ## Evidence / Assets
 - 스크린샷/헤더 캡처/다이어그램은 `docs/assets/`에 저장하고 **문서에서는 링크로만 참조**한다.
