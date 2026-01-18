@@ -139,38 +139,32 @@ Security Filter Chain에서 차단되는 경우에도 동일 포맷을 유지하
 
 | code | HTTP | 의미(요약) |
 |---|---:|---|
-| EMAIL_DOMAIN_NOT_ALLOWED | 400 | @kyonggi.ac.kr 도메인만 허용 
-| EMAIL_ALREADY_EXISTS     | 409 | 이메일 중복                  
-| NICKNAME_ALREADY_EXISTS  | 409 | 닉네임 중복                  
+| EMAIL_DOMAIN_NOT_ALLOWED | 400 | @kyonggi.ac.kr 도메인만 허용 |
+| EMAIL_ALREADY_EXISTS     | 409 | 이메일 중복 |
+| NICKNAME_ALREADY_EXISTS  | 409 | 닉네임 중복 |
+| OTP_ALREADY_VERIFIED     | 409 | 이미 verified (미만료) |
+| OTP_COOLDOWN             | 429 | 쿨다운 |
+| OTP_DAILY_LIMIT          | 429 | 일일 발송 제한 |
+| OTP_NOT_FOUND            | 400 | OTP 요청 이력 없음 |
+| OTP_EXPIRED              | 400 | OTP 만료 |
+| OTP_TOO_MANY_FAILURES    | 429 | 실패횟수 초과 |
+| OTP_INVALID              | 400 | OTP 불일치 |
+| OTP_NOT_VERIFIED         | 400 | verified 필요 |
+| PASSWORD_MISMATCH        | 400 | 비밀번호 불일치 |
+| WEAK_PASSWORD            | 400 | 비밀번호 정책 불만족 |
+| INVALID_NICKNAME         | 400 | 닉네임 정책 불만족 |
+| INVALID_CREDENTIALS      | 401 | 로그인 실패(유저 없음/비번 불일치 통합) |
+| ACCOUNT_DISABLED         | 403 | 비활성 계정 |
+| AUTH_REQUIRED            | 401 | 인증 필요(토큰 없음) |
+| ACCESS_INVALID           | 401 | access JWT invalid |
+| REFRESH_INVALID          | 401 | refresh invalid(없음/미발급/유저 없음 등) |
+| REFRESH_EXPIRED          | 401 | refresh 만료 |
+| REFRESH_REUSED           | 401 | refresh 재사용 차단 |
+| REFRESH_REVOKED          | 401 | refresh revoke됨 |
+| USER_NOT_FOUND           | 401 | 토큰은 유효하나 사용자 없음(비정상 상태) |
+| VALIDATION_ERROR         | 400 | 요청 검증 실패(@Valid/@Validated) |
+| INTERNAL_ERROR           | 500 | 처리되지 않은 서버 오류 |
 
-| OTP_ALREADY_VERIFIED     | 409 | 이미 verified (미만료)       
-| OTP_COOLDOWN             | 429 | 쿨다운                      
-| OTP_DAILY_LIMIT          | 429 | 일일 발송 제한               
-| OTP_NOT_FOUND            | 400 | OTP 요청 이력 없음           
-| OTP_EXPIRED              | 400 | OTP 만료                   
-| OTP_TOO_MANY_FAILURES    | 429 | 실패횟수 초과               
-| OTP_INVALID              | 400 | OTP 불일치                 
-| OTP_NOT_VERIFIED         | 400 | verified 필요               
-
-| PASSWORD_MISMATCH        | 400 | 비밀번호 불일치              
-| WEAK_PASSWORD            | 400 | 비밀번호 정책 불만족          
-| INVALID_NICKNAME         | 400 | 닉네임 정책 불만족            
-
-| INVALID_CREDENTIALS      | 401 | 로그인 실패(유저 없음/비번 불일치 통합) 
-| ACCOUNT_DISABLED         | 403 | 비활성 계정 
-
-| AUTH_REQUIRED            | 401 | 인증 필요(토큰 없음) 
-| ACCESS_INVALID           | 401 | access JWT invalid 
-
-| REFRESH_INVALID          | 401 | refresh invalid(없음/미발급/유저 없음 등) 
-| REFRESH_EXPIRED          | 401 | refresh 만료 
-| REFRESH_REUSED           | 401 | refresh 재사용 차단 
-| REFRESH_REVOKED          | 401 | refresh revoke됨 
-
-| USER_NOT_FOUND           | 401 | 토큰은 유효하나 사용자 없음(비정상 상태) 
-
-| VALIDATION_ERROR         | 400 | 요청 검증 실패(@Valid/@Validated) 
-| INTERNAL_ERROR           | 500 | 처리되지 않은 서버 오류 
 ---
 
 ## 5) 429(Rate Limit) 계약
@@ -220,14 +214,14 @@ Content-Type: application/json;charset=UTF-8
 
 | Endpoint | Method | Auth | Success | Notes |
 |---|---|---|---:|---|
-| /auth/signup/otp/request | POST | -                 | 204 | best-effort mail 
-| /auth/signup/otp/verify  | POST | -                 | 204 | -                
-| /auth/signup/complete    | POST | -                 | 201 | TODO: status/location 고정 
-| /auth/login              | POST | -                 | 200 | body=access, cookie=refresh 
-| /auth/refresh            | POST | cookie            | 200 | rotation, old reuse blocked 
-| /auth/logout             | POST | (cookie optional) | 204 | idempotent 
-| /auth/me                 | GET  | Bearer            | 200 | - 
-| /actuator/health/**      | GET  | -                 | 200 | permitAll (Authorization 넣지 말 것) 
+| /auth/signup/otp/request | POST | - | 204 | best-effort mail |
+| /auth/signup/otp/verify | POST | - | 204 | - |
+| /auth/signup/complete | POST | - | 201 | TODO: status/location 고정 |
+| /auth/login | POST | - | 200 | body=access, cookie=refresh |
+| /auth/refresh | POST | cookie | 200 | rotation, old reuse blocked |
+| /auth/logout | POST | (cookie optional) | 204 | idempotent |
+| /auth/me | GET | Bearer | 200 | - |
+| /actuator/health/** | GET | - | 200 | permitAll (Authorization 넣지 말 것) |
 
 ---
 
