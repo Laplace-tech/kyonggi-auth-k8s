@@ -13,6 +13,7 @@
 - [RUNBOOK](./docs/RUNBOOK.md)
 - [API](./docs/API.md)
 - [DEMO](./docs/DEMO.md)
+- [TESTS](./docs/TESTS.md)
 
 ## Evidence / Assets
 - 스크린샷/헤더 캡처/다이어그램은 `docs/assets/`에 저장하고 **문서에서는 링크로만 참조**한다.
