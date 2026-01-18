@@ -214,7 +214,7 @@ curl -i http://localhost:8080/actuator/health/readiness
 
 curl -i -X POST "http://localhost:8080/auth/signup/otp/request" \
   -H "Content-Type: application/json" \
-  -d '{"email":"add28482848@kyonggi.ac.kr"}'
+  -d '{"email":"<YOUR_KYONGGI_EMAIL>@kyonggi.ac.kr"}'
 ```
 
 - **실 메일 수신 증거 캡처(필수)**  
@@ -305,7 +305,7 @@ MailHog에서 OTP 코드를 확인하고 아래에 넣는다.
 
 ## A.2 OTP 검증 (204)
 ```bash
-export OTP="837064"  # <-- MailHog에서 본 값으로 교체
+export OTP="000000"  # <-- MailHog에서 본 값으로 교체
 
 curl -i -X POST "$BASE/auth/signup/otp/verify" \
   -H "Content-Type: application/json" \
